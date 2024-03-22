@@ -28,7 +28,7 @@ public class JwtService {
                 .getBody();
     }
 
-    public String generateToken(Map<String, Object> extraClaims, userDetails userDetails) {
+    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         return Jwts.builder()
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
@@ -38,7 +38,7 @@ public class JwtService {
                 .compact();
     }
 
-    public String generateToken(userDetails userDetails) {
+    public String generateToken(UserDetails userDetails) {
         return generateToken(Map.of(), userDetails);
     }
 
