@@ -16,7 +16,8 @@ import uk.ac.leedsbeckett.albertarkaa.studentportal.Repository.UserRepository;
 @RequiredArgsConstructor
 public class ApplicationConfig {
 
-private final UserRepository UserRepository;
+    private final UserRepository UserRepository;
+
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> UserRepository.findByUsername(username)
@@ -27,8 +28,13 @@ private final UserRepository UserRepository;
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService());
-        provider.setPasswordEncoder(new BCryptPasswordEncoder());
+        provider.setPasswordEncoder(PasswordEncoder());
         return provider;
+    }
+
+    @Bean
+    public BCryptPasswordEncoder PasswordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
     @Bean

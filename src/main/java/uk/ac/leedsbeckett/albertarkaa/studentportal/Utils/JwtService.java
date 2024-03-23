@@ -7,6 +7,7 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.UserModel;
 
 import java.security.Key;
 import java.util.Date;
@@ -51,7 +52,7 @@ public class JwtService {
         return extractExpiration(jwt).before(new Date());
     }
 
-    private Date extractExpiration(String jwt) {
+    public Date extractExpiration(String jwt) {
         return extractClaim(jwt, Claims::getExpiration);
     }
     private <T> T extractClaim(String jwt, Function<Claims,T> claimsResolver) {
@@ -62,5 +63,14 @@ public class JwtService {
     private Key getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public String generateRefreshToken(UserModel user) {
+        return Jwts.builder()
+                .setSubject(user.getUsername())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 7))
+                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
 }

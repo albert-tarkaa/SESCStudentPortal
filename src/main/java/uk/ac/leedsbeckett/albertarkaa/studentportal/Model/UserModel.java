@@ -2,6 +2,7 @@ package uk.ac.leedsbeckett.albertarkaa.studentportal.Model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -10,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Utils.Role;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -17,41 +19,23 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@Builder
 @Table(name = "users")
 public class UserModel implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+    @Column(unique = true)
     private String username;
     private String password;
+    @Column(unique = true)
     private String email;
     @Column(updatable = false)
-    private LocalDate createdAt;
-    private LocalDate lastLogin;
+    private LocalDateTime createdAt;
+    private LocalDateTime lastLogin;
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    public UserModel(String username, String password, String email, LocalDate createdAt, LocalDate lastLogin, Role role) {
-        this.username = username;
-        this.password = password;
-        this.email = email;
-        this.createdAt = createdAt;
-        this.lastLogin = lastLogin;
-        this.role = role;
-    }
-
-    public UserModel(String username, String password, String email, Role role) {
-        this.username = username;
-        this.password = password;
-        this.email = email;
-        this.role = role;
-    }
-
-    public UserModel(String username, String password, String email) {
-        this.username = username;
-        this.password = password;
-        this.email = email;
-    }
 
 
     @Override
