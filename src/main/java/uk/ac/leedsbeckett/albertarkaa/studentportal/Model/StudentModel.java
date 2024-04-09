@@ -6,7 +6,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -18,19 +21,18 @@ public class StudentModel {
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private int id;
+    @Column(nullable = false, unique = true, length = 45)
+    private String email;
+    @Column(nullable = false, unique = true, length = 20)
     private String studentID;
     private String firstName;
     private String lastName;
-    private String email;
+    private boolean isUpdated = false;
     @Column(updatable = false)
-    private LocalDate createdAt;
-    private LocalDate updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
-    public StudentModel(String studentID, String firstName, String lastName, String email) {
-        this.studentID = studentID;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-    }
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<StudentCourseModel> studentCourses = new ArrayList<>();
 
 }
