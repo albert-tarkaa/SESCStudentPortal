@@ -1,16 +1,12 @@
 package uk.ac.leedsbeckett.albertarkaa.studentportal.Model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Utils.Role;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -23,20 +19,27 @@ import java.util.List;
 @Table(name = "users")
 public class UserModel implements UserDetails {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
     private int id;
-    @Column(unique = true)
-    private String username;
-    private String password;
-    @Column(unique = true)
+    @Column(nullable = false, unique = true, length = 45)
     private String email;
+
+    @Column(nullable = false, unique = true, length = 20)
+    private String username;
+
+    @Column(nullable = false, length = 64)
+    private String password;
+
     @Column(updatable = false)
     private LocalDateTime createdAt;
     private LocalDateTime lastLogin;
+
     @Enumerated(EnumType.STRING)
     private Role role;
 
-
+    @OneToOne
+    @JoinColumn(name="id" , referencedColumnName = "id")
+    private StudentModel studentModel;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -72,4 +75,6 @@ public class UserModel implements UserDetails {
     public String getUsername() {
         return username;
     }
+
+
 }
