@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.UserModel;
@@ -16,7 +17,8 @@ import java.util.function.Function;
 
 @Service
 public class JwtService {
-    private static final String SECRET_KEY="575e3d6c4a46312e55415543767e4050352822595c6a7c445e4978257e";
+    @Value("${application.security.jwt.secretKey}")
+    private String secretKey;
     public String extractUsername(String jwt) {
         return extractClaim(jwt, Claims::getSubject);
     }
@@ -52,6 +54,7 @@ public class JwtService {
         return extractExpiration(jwt).before(new Date());
     }
 
+
     public Date extractExpiration(String jwt) {
         return extractClaim(jwt, Claims::getExpiration);
     }
@@ -61,16 +64,7 @@ public class JwtService {
     }
 
     private Key getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
-    }
-
-    public String generateRefreshToken(UserModel user) {
-        return Jwts.builder()
-                .setSubject(user.getUsername())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 7))
-                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
-                .compact();
     }
 }
