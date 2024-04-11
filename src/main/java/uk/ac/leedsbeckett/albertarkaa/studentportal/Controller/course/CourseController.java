@@ -9,7 +9,7 @@ import uk.ac.leedsbeckett.albertarkaa.studentportal.Service.CourseService;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Utils.ControllerResponse;
 
 import java.util.List;
-
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
 @RequestMapping("/api/course")
 @RequiredArgsConstructor
@@ -22,7 +22,7 @@ public class CourseController {
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(response);
         }
     }
@@ -36,7 +36,7 @@ public class CourseController {
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(response);
         }
     }

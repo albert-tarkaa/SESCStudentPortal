@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Service.StudentService;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Utils.ControllerResponse;
-
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -20,7 +20,7 @@ public class StudentController {
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(response);
         }
     }
@@ -34,7 +34,7 @@ public class StudentController {
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(response);
         }
 
