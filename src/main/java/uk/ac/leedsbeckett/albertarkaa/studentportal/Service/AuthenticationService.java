@@ -2,6 +2,8 @@ package uk.ac.leedsbeckett.albertarkaa.studentportal.Service;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.http.auth.InvalidCredentialsException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -32,6 +34,7 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final StudentService studentService;
     private final StudentRepository studentRepository;
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
 
     public ControllerResponse<AuthenticationResponse> register(RegisterRequest registerRequest) {
         try {
@@ -53,7 +56,8 @@ public class AuthenticationService {
                     .id(user.getId())
                     .build());
         } catch (Exception e) {
-            return new ControllerResponse<>(false, e.getMessage(), null);
+            logger.error("An error occurred", e);
+            return new ControllerResponse<>(false, "An unexpected error occurred while processing your request. Please try again later.", null);
         }
     }
 
@@ -79,7 +83,8 @@ public class AuthenticationService {
                     .id(user.get().getId())
                     .build());
         } catch (Exception e) {
-            return new ControllerResponse<>(false, e.getMessage(), null);
+            logger.error("An error occurred", e);
+            return new ControllerResponse<>(false, "An unexpected error occurred while processing your request. Please try again later.", null);
         }
 
     }

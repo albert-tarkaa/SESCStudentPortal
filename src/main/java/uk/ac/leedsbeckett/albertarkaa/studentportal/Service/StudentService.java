@@ -2,6 +2,8 @@ package uk.ac.leedsbeckett.albertarkaa.studentportal.Service;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.stereotype.Service;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.course.CourseInfo;
@@ -24,7 +26,7 @@ import java.util.Optional;
 public class StudentService {
 
     private final StudentRepository studentRepository;
-    private final StudentCourseModel studentCourseModel;
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
 
     public StudentModel createStudentFromUser(UserModel user) {
         if (studentRepository.existsByEmail(user.getEmail())) {
@@ -63,7 +65,9 @@ public class StudentService {
                 throw new NotFoundException();
             }
         } catch (Exception e) {
-            return new ControllerResponse<>(false, e.getMessage(), null);
+            logger.error("An error occurred", e);
+            return new ControllerResponse<>(false, "An unexpected error occurred while processing your request. Please try again later.", null);
+
         }
     }
 
@@ -87,7 +91,9 @@ public class StudentService {
                 return new ControllerResponse<>(false, "Student not found", null);
             }
         } catch (Exception e) {
-            return new ControllerResponse<>(false, e.getMessage(), null);
+            logger.error("An error occurred", e);
+            return new ControllerResponse<>(false, "An unexpected error occurred while processing your request. Please try again later.", null);
+
         }
     }
 

@@ -1,6 +1,8 @@
 package uk.ac.leedsbeckett.albertarkaa.studentportal.Service;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.course.CourseResponse;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.CourseModel;
@@ -22,6 +24,7 @@ public class CourseService {
     private final CourseRepository courseRepository;
     private final StudentRepository studentRepository;
     private final StudentCourseRepository studentCourseRepository;
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
 
     public ControllerResponse<List<CourseResponse>> getAllCourses() {
         try {
@@ -31,7 +34,9 @@ public class CourseService {
                     .collect(Collectors.toList());
             return new ControllerResponse<>(true, null, courseResponses);
         } catch (Exception e) {
-            return new ControllerResponse<>(false, e.getMessage(), null);
+            logger.error("An error occurred", e);
+            return new ControllerResponse<>(false, "An unexpected error occurred while processing your request. Please try again later.", null);
+
         }
     }
 
@@ -72,7 +77,9 @@ public class CourseService {
             return new ControllerResponse<>(true, null,
                     "You have been enrolled successfully in " + courseModel.getCourseName());
         } catch (Exception e) {
-            return new ControllerResponse<>(false, e.getMessage(), null);
+            logger.error("An error occurred", e);
+            return new ControllerResponse<>(false, "An unexpected error occurred while processing your request. Please try again later.", null);
+
         }
     }
 }
