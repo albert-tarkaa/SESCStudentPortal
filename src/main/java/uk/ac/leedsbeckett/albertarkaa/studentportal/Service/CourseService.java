@@ -8,13 +8,16 @@ import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.course.CourseResp
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.CourseModel;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.StudentCourseModel;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.StudentModel;
+import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.UserModel;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Repository.CourseRepository;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Repository.StudentCourseRepository;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Repository.StudentRepository;
+import uk.ac.leedsbeckett.albertarkaa.studentportal.Utils.AuthServiceImplementation;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Utils.ControllerResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,10 +27,16 @@ public class CourseService {
     private final CourseRepository courseRepository;
     private final StudentRepository studentRepository;
     private final StudentCourseRepository studentCourseRepository;
+    private final AuthServiceImplementation authServiceImplementation;
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
 
-    public ControllerResponse<List<CourseResponse>> getAllCourses() {
+    public ControllerResponse<List<CourseResponse>> getAllCourses(String token){
         try {
+            Optional<UserModel> userOptional = authServiceImplementation.getUserByToken(token);
+            if (userOptional.isEmpty()) {
+                return new ControllerResponse<>(false, "User not authorised", null);
+            }
+
             List<CourseModel> courseModels = courseRepository.findAll();
             List<CourseResponse> courseResponses = courseModels.stream()
                     .map(this::mapCourseModelToResponse)
@@ -49,15 +58,20 @@ public class CourseService {
         );
     }
 
-    public ControllerResponse<String> enrollCourse(String courseCode, String studentId) {
+    public ControllerResponse<String> enrollCourse(String courseCode, int id, String token) {
         try {
+            Optional<UserModel> userOptional = authServiceImplementation.getUserByToken(token);
+            if (userOptional.isEmpty()) return new ControllerResponse<>(false, "User not found", null);
+
+            UserModel user = userOptional.get();
+            if (!authServiceImplementation.isAuthorized(user, id)) return new ControllerResponse<>(false, "Unauthorized", null);
 
             CourseModel courseModel = courseRepository.findByCourseCode(courseCode);
             if (courseModel == null) {
                 return new ControllerResponse<>(false, "Course not found", null);
             }
 
-            StudentModel studentModel = studentRepository.findByStudentID(studentId);
+            StudentModel studentModel = studentRepository.findById(id);
             if (studentModel == null || !studentModel.isUpdated()) {
                 return new ControllerResponse<>(false, "Student not found/Student profile not updated. Ensure correct information and try again", null);
             }

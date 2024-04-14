@@ -17,8 +17,8 @@ public class CourseController {
 
     private final CourseService courseService;
     @GetMapping("/list")
-    public ResponseEntity<ControllerResponse<List<CourseResponse>>> getAllCourses() {
-        ControllerResponse<List<CourseResponse>> response = courseService.getAllCourses();
+    public ResponseEntity<ControllerResponse<List<CourseResponse>>> getAllCourses(@RequestHeader("Authorization") String token){
+        ControllerResponse<List<CourseResponse>> response = courseService.getAllCourses(token);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {
@@ -27,12 +27,14 @@ public class CourseController {
         }
     }
 
-    @PostMapping("/enroll")
+    @PostMapping("/enroll/{id}")
     public ResponseEntity<ControllerResponse<String>> enrollCourse(
-            @RequestBody EnrollmentRequest enrollmentRequest) {
+            @RequestBody EnrollmentRequest enrollmentRequest,
+            @PathVariable int id,
+            @RequestHeader("Authorization") String token){
 
         ControllerResponse<String> response = courseService.enrollCourse(enrollmentRequest.getCourseCode(),
-                enrollmentRequest.getStudentId());
+               id, token);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {

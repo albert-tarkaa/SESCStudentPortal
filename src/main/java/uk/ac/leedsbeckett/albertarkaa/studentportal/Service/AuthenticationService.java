@@ -14,6 +14,7 @@ import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.auth.Authenticati
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.auth.AuthenticationResponse;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.auth.LogoutRequest;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.auth.RegisterRequest;
+import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.StudentModel;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.UserModel;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Repository.StudentRepository;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Repository.UserRepository;
@@ -49,11 +50,14 @@ public class AuthenticationService {
             userRepository.save(user);
             // Create student record
             studentRepository.save(studentService.createStudentFromUser(user));
+            Optional <StudentModel> student = studentRepository.findByEmail(user.getEmail());
 
             var jwtToken = jwtService.generateToken(user);
             return new ControllerResponse<>(true, null, AuthenticationResponse.builder()
                     .authToken(jwtToken)
                     .id(user.getId())
+                    .studentID(student.get().getStudentID())
+                    .username(user.getUsername())
                     .build());
         } catch (Exception e) {
             logger.error("An error occurred", e);
@@ -77,10 +81,14 @@ public class AuthenticationService {
             user.get().setLastLogin(LocalDateTime.now());
             userRepository.save(user.get());
 
+          Optional <StudentModel> student = studentRepository.findByEmail(user.get().getEmail());
+
             var jwtToken = jwtService.generateToken(user.get());
             return new ControllerResponse<>(true, null, AuthenticationResponse.builder()
                     .authToken(jwtToken)
                     .id(user.get().getId())
+                    .username(user.get().getUsername())
+                    .studentID(student.get().getStudentID())
                     .build());
         } catch (Exception e) {
             logger.error("An error occurred", e);

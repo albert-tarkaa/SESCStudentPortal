@@ -15,8 +15,10 @@ public class StudentController {
     private final StudentService studentService;
 
     @GetMapping("/student/{id}")
-    public ResponseEntity<ControllerResponse<StudentResponse>> getStudent(@PathVariable int id) {
-        ControllerResponse<StudentResponse> response = studentService.getStudent(id);
+    public ResponseEntity<ControllerResponse<StudentResponse>> getStudent(@PathVariable int id,
+    @RequestHeader("Authorization") String token)
+    {
+        ControllerResponse<StudentResponse> response = studentService.getStudent(id, token);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {
@@ -25,12 +27,11 @@ public class StudentController {
         }
     }
 
-
     @PostMapping("/student/update/{id}")
-    public ResponseEntity<ControllerResponse<StudentResponse>> updateStudent(@PathVariable("id") int id, @RequestBody StudentUpdateRequest studentUpdateRequest
-    ) {
-
-        ControllerResponse<StudentResponse> response = studentService.updateStudent(id, studentUpdateRequest);
+    public ResponseEntity<ControllerResponse<StudentResponse>> updateStudent(@PathVariable("id") int id,
+     @RequestBody StudentUpdateRequest studentUpdateRequest,@RequestHeader("Authorization") String token)
+     {
+        ControllerResponse<StudentResponse> response = studentService.updateStudent(id, studentUpdateRequest, token);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {
