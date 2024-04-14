@@ -32,7 +32,7 @@ public class StudentResponse {
         this.lastName = studentToUpdate.getLastName();
         this.updated = studentToUpdate.isUpdated();
         this.courses = studentToUpdate.getStudentCourses().stream()
-                .map(course -> new CourseInfo(course.getCourse()))
+                .map(studentCourse -> new CourseInfo(studentCourse.getCourse(), studentCourse.getReference()))
                 .collect(Collectors.toList());
     }
 }

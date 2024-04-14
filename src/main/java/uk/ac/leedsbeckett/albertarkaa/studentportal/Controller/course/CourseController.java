@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.StudentModel;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Service.CourseService;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Utils.ControllerResponse;
 
@@ -28,12 +27,11 @@ public class CourseController {
     }
 
     @PostMapping("/enroll/{id}")
-    public ResponseEntity<ControllerResponse<String>> enrollCourse(
+    public ResponseEntity<ControllerResponse<EnrollmentResponse>> enrollCourse(
             @RequestBody EnrollmentRequest enrollmentRequest,
             @PathVariable int id,
             @RequestHeader("Authorization") String token){
-
-        ControllerResponse<String> response = courseService.enrollCourse(enrollmentRequest.getCourseCode(),
+        ControllerResponse<EnrollmentResponse> response = courseService.enrollCourse(enrollmentRequest.getCourseCode(),
                id, token);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);

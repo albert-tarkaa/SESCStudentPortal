@@ -58,7 +58,7 @@ public class StudentService {
                 List<CourseInfo> courses = new ArrayList<>();
                 for (StudentCourseModel courseModel : studentOptional.getStudentCourses()) {
                     CourseModel course = courseModel.getCourse();
-                    courses.add(new CourseInfo(course));
+                    courses.add(new CourseInfo(course, courseModel.getReference()));
                 }
 
                 return new ControllerResponse<>(true, null, StudentResponse.builder()

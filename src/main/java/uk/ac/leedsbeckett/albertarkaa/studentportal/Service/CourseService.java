@@ -3,8 +3,11 @@ package uk.ac.leedsbeckett.albertarkaa.studentportal.Service;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.course.CourseResponse;
+import org.springframework.web.reactive.function.client.WebClient;
+import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.course.*;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.CourseModel;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.StudentCourseModel;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.StudentModel;
@@ -58,7 +61,7 @@ public class CourseService {
         );
     }
 
-    public ControllerResponse<String> enrollCourse(String courseCode, int id, String token) {
+    public ControllerResponse<EnrollmentResponse> enrollCourse(String courseCode, int id, String token) {
         try {
             Optional<UserModel> userOptional = authServiceImplementation.getUserByToken(token);
             if (userOptional.isEmpty()) return new ControllerResponse<>(false, "User not found", null);
@@ -81,15 +84,42 @@ public class CourseService {
                 return new ControllerResponse<>(false, "You are already enrolled in this course", null);
             }
 
+            CourseEnrollmentRequest courseEnrollmentRequest = new CourseEnrollmentRequest();
+            courseEnrollmentRequest.setAmount(courseModel.getFee());
+
+            Account account = new Account();
+            account.setStudentId(studentModel.getStudentID());
+            courseEnrollmentRequest.setAccount(account);
+
+            CourseEnrollmentResponse courseEnrollmentResponse =  WebClient.builder()
+                    .baseUrl("http://localhost:8081")
+                    .build()
+                    .post()
+                    .uri("/invoices")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .bodyValue(courseEnrollmentRequest)
+                    .retrieve()
+                    .bodyToMono(CourseEnrollmentResponse.class)
+                    .block();
+
             StudentCourseModel enrollment = StudentCourseModel.builder()
                     .student(studentModel)
                     .course(courseModel)
+                    .reference(courseEnrollmentResponse.getReference())
                     .enrolledAt(LocalDateTime.now())
                     .build();
 
+            EnrollmentResponse enrollmentResponse = EnrollmentResponse.builder()
+                    .courseCode(courseModel.getCourseCode())
+                    .courseName(courseModel.getCourseName())
+                    .courseDescription(courseModel.getCourseDescription())
+                    .fee(courseModel.getFee())
+                    .reference(enrollment.getReference())
+                    .build();
+
+
             studentCourseRepository.save(enrollment);
-            return new ControllerResponse<>(true, null,
-                    "You have been enrolled successfully in " + courseModel.getCourseName());
+            return new ControllerResponse<EnrollmentResponse>(true, null, new EnrollmentResponse(enrollmentResponse));
         } catch (Exception e) {
             logger.error("An error occurred", e);
             return new ControllerResponse<>(false, "An unexpected error occurred while processing your request. Please try again later.", null);

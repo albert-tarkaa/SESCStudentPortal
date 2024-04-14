@@ -13,11 +13,13 @@ public class CourseInfo {
     private String courseName;
     private String courseDescription;
     private double fee;
+    private String reference;
 
-    public CourseInfo(CourseModel course) {
+    public CourseInfo(CourseModel course, String reference) {
         this.courseCode = course.getCourseCode();
         this.courseName = course.getCourseName();
         this.courseDescription = course.getCourseDescription();
         this.fee = course.getFee();
+        this.reference = reference;
     }
 }
