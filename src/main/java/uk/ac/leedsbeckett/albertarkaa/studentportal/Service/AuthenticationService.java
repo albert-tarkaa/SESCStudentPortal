@@ -4,16 +4,18 @@ import lombok.RequiredArgsConstructor;
 import org.apache.http.auth.InvalidCredentialsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.auth.AuthenticationRequest;
-import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.auth.AuthenticationResponse;
-import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.auth.LogoutRequest;
-import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.auth.RegisterRequest;
+import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.WebClient;
+import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.auth.*;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.StudentModel;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.UserModel;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Repository.StudentRepository;
@@ -28,6 +30,9 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
+
+
+    private final WebClient webClient;
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -51,6 +56,30 @@ public class AuthenticationService {
             // Create student record
             studentRepository.save(studentService.createStudentFromUser(user));
             Optional <StudentModel> student = studentRepository.findByEmail(user.getEmail());
+
+            // Register student in Finance and Library microservices
+            WebClient.builder()
+                    .baseUrl("http://localhost:8081")
+                    .build()
+                    .post()
+                    .uri("/accounts")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .bodyValue("{\"studentId\": \"" + student.get().getStudentID() + "\"}")
+                    .retrieve()
+                    .bodyToMono(FinanceResponse.class)
+                    .block();
+
+
+           WebClient.builder()
+                    .baseUrl("http://localhost:80")
+                    .build()
+                    .post()
+                    .uri("/api/register")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .bodyValue("{\"studentId\": \"" + student.get().getStudentID() + "\"}")
+                    .retrieve()
+                    .bodyToMono(LibraryResponse.class)
+                    .block();
 
             var jwtToken = jwtService.generateToken(user);
             return new ControllerResponse<>(true, null, AuthenticationResponse.builder()
