@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @NoArgsConstructor
 public class StudentResponse {
+    private int id;
     private String studentID;
     private String email;
     private String firstName;
@@ -24,6 +25,7 @@ public class StudentResponse {
 
 
     public StudentResponse(StudentModel studentToUpdate) {
+        this.id = studentToUpdate.getId();
         this.studentID = studentToUpdate.getStudentID();
         this.email = studentToUpdate.getEmail();
         this.firstName = studentToUpdate.getFirstName();

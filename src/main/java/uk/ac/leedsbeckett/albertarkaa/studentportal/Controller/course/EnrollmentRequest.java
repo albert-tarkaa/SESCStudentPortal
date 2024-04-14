@@ -10,8 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EnrollmentRequest {
-
-    private String studentId;
     private String courseCode;
 }
 
