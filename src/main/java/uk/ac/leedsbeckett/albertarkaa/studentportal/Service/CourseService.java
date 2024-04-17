@@ -3,10 +3,14 @@ package uk.ac.leedsbeckett.albertarkaa.studentportal.Service;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestTemplate;
+import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.auth.FinanceResponse;
+import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.auth.MicroservicesStudentIDRequest;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.course.*;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.CourseModel;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.StudentCourseModel;
@@ -26,6 +30,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class CourseService {
+
+    @Value("${financeUrl}")
+    private String financeURL;
 
     private final CourseRepository courseRepository;
     private final StudentRepository studentRepository;
@@ -91,25 +98,25 @@ public class CourseService {
             account.setStudentId(studentModel.getStudentID());
             courseEnrollmentRequest.setAccount(account);
 
-            CourseEnrollmentResponse courseEnrollmentResponse =  WebClient.builder()
-                    .baseUrl("http://localhost:8081")
-                    .build()
-                    .post()
-                    .uri("/invoices")
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .bodyValue(courseEnrollmentRequest)
-                    .retrieve()
-                    .bodyToMono(CourseEnrollmentResponse.class)
-                    .block();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            RestTemplate restTemplate = new RestTemplate();
+            HttpEntity<CourseEnrollmentRequest> AccountRequest = new HttpEntity<>(courseEnrollmentRequest,headers);
+
+
+            CourseEnrollmentResponse enrollmentResponse =  restTemplate.postForObject(financeURL + "/invoices/",
+                    AccountRequest, CourseEnrollmentResponse.class);
 
             StudentCourseModel enrollment = StudentCourseModel.builder()
                     .student(studentModel)
                     .course(courseModel)
-                    .reference(courseEnrollmentResponse.getReference())
+                    .reference(enrollmentResponse.getReference())
                     .enrolledAt(LocalDateTime.now())
                     .build();
 
-            EnrollmentResponse enrollmentResponse = EnrollmentResponse.builder()
+            EnrollmentResponse enrollmentResponseData = EnrollmentResponse.builder()
                     .courseCode(courseModel.getCourseCode())
                     .courseName(courseModel.getCourseName())
                     .courseDescription(courseModel.getCourseDescription())
@@ -119,7 +126,7 @@ public class CourseService {
 
 
             studentCourseRepository.save(enrollment);
-            return new ControllerResponse<EnrollmentResponse>(true, null, new EnrollmentResponse(enrollmentResponse));
+            return new ControllerResponse<EnrollmentResponse>(true, null, new EnrollmentResponse(enrollmentResponseData));
         } catch (Exception e) {
             logger.error("An error occurred", e);
             return new ControllerResponse<>(false, "An unexpected error occurred while processing your request. Please try again later.", null);

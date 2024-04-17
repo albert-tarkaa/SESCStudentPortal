@@ -5,6 +5,7 @@ import org.apache.http.auth.InvalidCredentialsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,8 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.ClientResponse;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestTemplate;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.auth.*;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.StudentModel;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.UserModel;
@@ -32,7 +32,11 @@ import java.util.Optional;
 public class AuthenticationService {
 
 
-    private final WebClient webClient;
+    @Value("${financeUrl}")
+    private String financeURL;
+
+    @Value("${libraryUrl}")
+    private String libraryURL;
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -58,28 +62,22 @@ public class AuthenticationService {
             Optional <StudentModel> student = studentRepository.findByEmail(user.getEmail());
 
             // Register student in Finance and Library microservices
-            WebClient.builder()
-                    .baseUrl("http://localhost:8081")
-                    .build()
-                    .post()
-                    .uri("/accounts")
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .bodyValue("{\"studentId\": \"" + student.get().getStudentID() + "\"}")
-                    .retrieve()
-                    .bodyToMono(FinanceResponse.class)
-                    .block();
+            String studentID = student.get().getStudentID();
+            MicroservicesStudentIDRequest microservicesStudentIDRequest = MicroservicesStudentIDRequest.builder()
+                    .StudentId(studentID)
+                    .build();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            RestTemplate restTemplate = new RestTemplate();
+            HttpEntity<MicroservicesStudentIDRequest> AccountRequest =
+                    new HttpEntity<>(microservicesStudentIDRequest,
+                    headers);
 
 
-           WebClient.builder()
-                    .baseUrl("http://localhost:80")
-                    .build()
-                    .post()
-                    .uri("/api/register")
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .bodyValue("{\"studentId\": \"" + student.get().getStudentID() + "\"}")
-                    .retrieve()
-                    .bodyToMono(LibraryResponse.class)
-                    .block();
+            restTemplate.postForObject(financeURL + "/accounts/", AccountRequest, FinanceResponse.class);
+            restTemplate.postForObject(libraryURL + "/api/register", AccountRequest, LibraryResponse.class);
 
             var jwtToken = jwtService.generateToken(user);
             return new ControllerResponse<>(true, null, AuthenticationResponse.builder()

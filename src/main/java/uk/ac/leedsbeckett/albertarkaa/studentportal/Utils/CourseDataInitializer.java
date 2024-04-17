@@ -18,10 +18,10 @@ public class CourseDataInitializer implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        for (int i = 1; i <= 8; i++) {
+        for (int i = 1; i <= 5; i++) {
             CourseModel course = CourseModel.builder()
                     .courseCode("SESC50" + i)
-                    .courseName(new Faker().lorem().sentence(3))
+                    .courseName(new Faker().educator().course())
                     .courseDescription(new Faker().lorem().sentence(25))
                     .fee(new Faker().number().randomDouble(2, 50, 150))
                     .createdAt(LocalDateTime.now())
