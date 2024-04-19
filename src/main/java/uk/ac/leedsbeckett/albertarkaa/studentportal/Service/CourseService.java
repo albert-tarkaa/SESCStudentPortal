@@ -40,21 +40,29 @@ public class CourseService {
     private final AuthServiceImplementation authServiceImplementation;
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
 
-    public ControllerResponse<List<CourseResponse>> getAllCourses(String token){
+    public ControllerResponse<List<CourseResponse>> getAllCourses(String token,String CourseName){
         try {
             Optional<UserModel> userOptional = authServiceImplementation.getUserByToken(token);
             if (userOptional.isEmpty()) {
                 return new ControllerResponse<>(false, "User not authorised", null);
             }
 
-            List<CourseModel> courseModels = courseRepository.findAll();
+            List<CourseModel> courseModels;
+            if (CourseName == null || CourseName.isBlank()) {
+                courseModels = courseRepository.findAll();
+            } else {
+                courseModels = courseRepository.findByCourseNameContainingIgnoreCase(CourseName);
+            }
+
             List<CourseResponse> courseResponses = courseModels.stream()
                     .map(this::mapCourseModelToResponse)
                     .collect(Collectors.toList());
             return new ControllerResponse<>(true, null, courseResponses);
         } catch (Exception e) {
             logger.error("An error occurred", e);
-            return new ControllerResponse<>(false, "An unexpected error occurred while processing your request. Please try again later.", null);
+            return new ControllerResponse<>(false,
+                    "An unexpected error occurred while processing your request. Please try again later.",
+                    null);
 
         }
     }

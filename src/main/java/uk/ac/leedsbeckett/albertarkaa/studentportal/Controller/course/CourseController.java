@@ -16,8 +16,9 @@ public class CourseController {
 
     private final CourseService courseService;
     @GetMapping("/list")
-    public ResponseEntity<ControllerResponse<List<CourseResponse>>> getAllCourses(@RequestHeader("Authorization") String token){
-        ControllerResponse<List<CourseResponse>> response = courseService.getAllCourses(token);
+    public ResponseEntity<ControllerResponse<List<CourseResponse>>> getAllCourses(@RequestHeader("Authorization") String token,
+                                                                                  @RequestParam(required = false) String CourseName){
+        ControllerResponse<List<CourseResponse>> response = courseService.getAllCourses(token,CourseName);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {
