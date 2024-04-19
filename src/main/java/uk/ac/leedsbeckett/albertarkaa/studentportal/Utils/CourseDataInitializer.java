@@ -21,7 +21,7 @@ public class CourseDataInitializer implements ApplicationRunner {
         for (int i = 1; i <= 5; i++) {
             CourseModel course = CourseModel.builder()
                     .courseCode("SESC50" + i)
-                    .courseName(new Faker().educator().course())
+                    .courseName(new Faker().lorem().words(5).toString())
                     .courseDescription(new Faker().lorem().sentence(25))
                     .fee(new Faker().number().randomDouble(2, 50, 150))
                     .createdAt(LocalDateTime.now())

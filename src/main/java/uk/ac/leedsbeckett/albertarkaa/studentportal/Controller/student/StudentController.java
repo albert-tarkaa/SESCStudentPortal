@@ -8,13 +8,13 @@ import uk.ac.leedsbeckett.albertarkaa.studentportal.Service.StudentService;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Utils.ControllerResponse;
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/student")
 @RequiredArgsConstructor
 public class StudentController {
 
     private final StudentService studentService;
 
-    @GetMapping("/student/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ControllerResponse<StudentResponse>> getStudent(@PathVariable int id,
     @RequestHeader("Authorization") String token)
     {
@@ -27,7 +27,7 @@ public class StudentController {
         }
     }
 
-    @PostMapping("/student/update/{id}")
+    @PostMapping("/update/{id}")
     public ResponseEntity<ControllerResponse<StudentResponse>> updateStudent(@PathVariable("id") int id,
      @RequestBody StudentUpdateRequest studentUpdateRequest,@RequestHeader("Authorization") String token)
      {
@@ -39,6 +39,19 @@ public class StudentController {
                     .body(response);
         }
 
+    }
+
+    @GetMapping("/getGraduationStatus/{id}")
+    public ResponseEntity<ControllerResponse<Object>> getGraduationStatus(@PathVariable int id,
+                                                                          @RequestHeader("Authorization") String token)
+    {
+        ControllerResponse<Object> response = studentService.getGraduationStatus(id, token);
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(response);
+        }
     }
 
 }

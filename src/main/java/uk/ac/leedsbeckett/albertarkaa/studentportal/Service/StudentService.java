@@ -5,8 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.auth.FinanceResponse;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.course.CourseInfo;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.student.StudentResponse;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Controller.student.StudentUpdateRequest;
@@ -28,10 +31,11 @@ import java.util.Optional;
 @Slf4j
 public class StudentService {
 
-    private final StudentRepository studentRepository;
-
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
+    private final StudentRepository studentRepository;
     private final AuthServiceImplementation authServiceImplementation;
+    @Value("${financeUrl}")
+    private String financeURL;
 
     public StudentModel createStudentFromUser(UserModel user) {
         if (studentRepository.existsByEmail(user.getEmail())) {
@@ -52,10 +56,11 @@ public class StudentService {
             if (userOptional.isEmpty()) return new ControllerResponse<>(false, "User not found", null);
 
             UserModel user = userOptional.get();
-            if (!authServiceImplementation.isAuthorized(user, id))  return new ControllerResponse<>(false, "Unauthorized", null);
+            if (!authServiceImplementation.isAuthorized(user, id))
+                return new ControllerResponse<>(false, "Unauthorized", null);
 
             StudentModel studentOptional = studentRepository.findById(id);
-            if (studentOptional!=null) {
+            if (studentOptional != null) {
 
                 List<CourseInfo> courses = new ArrayList<>();
                 for (StudentCourseModel courseModel : studentOptional.getStudentCourses()) {
@@ -82,18 +87,18 @@ public class StudentService {
         }
     }
 
-
     public ControllerResponse<StudentResponse> updateStudent(int id, StudentUpdateRequest studentUpdateRequest, String token) {
         try {
 
             Optional<UserModel> userOptional = authServiceImplementation.getUserByToken(token);
-            if (userOptional.isEmpty())  return new ControllerResponse<>(false, "User not found", null);
+            if (userOptional.isEmpty()) return new ControllerResponse<>(false, "User not found", null);
 
             UserModel user = userOptional.get();
-            if (!authServiceImplementation.isAuthorized(user, id))  return new ControllerResponse<>(false, "Unauthorized", null);
+            if (!authServiceImplementation.isAuthorized(user, id))
+                return new ControllerResponse<>(false, "Unauthorized", null);
 
             StudentModel studentOptional = studentRepository.findById(id);
-            if (studentOptional!=null) {
+            if (studentOptional != null) {
                 if (studentOptional.isUpdated()) {
                     return new ControllerResponse<>(false, "Student details have already been updated", null);
                 }
@@ -122,4 +127,38 @@ public class StudentService {
         studentRepository.save(studentToUpdate);
     }
 
+    public ControllerResponse<Object> getGraduationStatus(int id, String token) {
+        try {
+
+            Optional<UserModel> userOptional = authServiceImplementation.getUserByToken(token);
+            if (userOptional.isEmpty()) return new ControllerResponse<>(false, "User not found", null);
+
+            UserModel user = userOptional.get();
+            if (!authServiceImplementation.isAuthorized(user, id))
+                return new ControllerResponse<>(false, "Unauthorized", null);
+
+            StudentModel studentOptional = studentRepository.findById(id);
+            if (studentOptional != null) {
+
+                RestTemplate restTemplate = new RestTemplate();
+
+                FinanceResponse financeResponse =
+                        restTemplate.getForObject(financeURL + "/accounts/student/" + studentOptional.getStudentID(), FinanceResponse.class);
+
+                if (financeResponse != null && financeResponse.isHasOutstandingBalance()) {
+                    return new ControllerResponse<>(true, null, "You have an outstanding balance. Please clear your balance to graduate.");
+                } else {
+                    return new ControllerResponse<>(true, null, "You are eligible to graduate.");
+                }
+            } else {
+                throw new NotFoundException();
+            }
+        } catch (Exception e) {
+            logger.error("An error occurred", e);
+            return new ControllerResponse<>(false, "An unexpected error occurred while processing your request. Please try again later.", null);
+
+        }
+
+
+    }
 }
