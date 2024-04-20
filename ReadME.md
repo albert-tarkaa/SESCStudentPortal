@@ -6,7 +6,7 @@ This project is a microservices-based student portal, which allows students to e
 
 Swagger documentation is available at `http://localhost:8082/studentportal-docs/v1/swagger-ui/index.html`.
 
-![UML Diagram](img.png?raw=true "UML.png")
+![UML Diagram](UML.png?raw=true "UML File")
 
 ## Requirements
 To fulfill the objectives of this module, the following features need to be implemented:
