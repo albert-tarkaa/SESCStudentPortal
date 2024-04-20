@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ControllerResponse<T> {
+public class ControllerResponse<T>  {
     private boolean success;
     private String errorMessage;
     private T data;

@@ -1,4 +1,4 @@
-package uk.ac.leedsbeckett.albertarkaa.studentportal.Utils;
+package uk.ac.leedsbeckett.albertarkaa.studentportal.Utils.Authentication;
 
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.UserModel;
 

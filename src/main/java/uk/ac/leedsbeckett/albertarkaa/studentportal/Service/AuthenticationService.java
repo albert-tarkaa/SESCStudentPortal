@@ -21,8 +21,8 @@ import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.UserModel;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Repository.StudentRepository;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Repository.UserRepository;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Utils.ControllerResponse;
-import uk.ac.leedsbeckett.albertarkaa.studentportal.Utils.JwtService;
-import uk.ac.leedsbeckett.albertarkaa.studentportal.Utils.Role;
+import uk.ac.leedsbeckett.albertarkaa.studentportal.Utils.Authentication.JwtService;
+import uk.ac.leedsbeckett.albertarkaa.studentportal.Utils.Authentication.Role;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -46,7 +46,7 @@ public class AuthenticationService {
     private final StudentRepository studentRepository;
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
 
-    public ControllerResponse<AuthenticationResponse> register(RegisterRequest registerRequest) {
+    public ControllerResponse<Object> register(RegisterRequest registerRequest) {
         try {
             var user = UserModel.builder()
                     .username(registerRequest.getUsername())
@@ -62,6 +62,8 @@ public class AuthenticationService {
             Optional <StudentModel> student = studentRepository.findByEmail(user.getEmail());
 
             // Register student in Finance and Library microservices
+            if (student.isEmpty()) return new ControllerResponse<>(false, "Student not found", null);
+
             String studentID = student.get().getStudentID();
             MicroservicesStudentIDRequest microservicesStudentIDRequest = MicroservicesStudentIDRequest.builder()
                     .StudentId(studentID)
@@ -79,13 +81,7 @@ public class AuthenticationService {
             restTemplate.postForObject(financeURL + "/accounts/", AccountRequest, FinanceResponse.class);
             restTemplate.postForObject(libraryURL + "/api/register", AccountRequest, LibraryResponse.class);
 
-            var jwtToken = jwtService.generateToken(user);
-            return new ControllerResponse<>(true, null, AuthenticationResponse.builder()
-                    .authToken(jwtToken)
-                    .id(user.getId())
-                    .studentID(student.get().getStudentID())
-                    .username(user.getUsername())
-                    .build());
+            return new ControllerResponse<>(true, null,"User registered successfully");
         } catch (Exception e) {
             logger.error("An error occurred", e);
             return new ControllerResponse<>(false, "An unexpected error occurred while processing your request. Please try again later.", null);
@@ -109,6 +105,9 @@ public class AuthenticationService {
             userRepository.save(user.get());
 
           Optional <StudentModel> student = studentRepository.findByEmail(user.get().getEmail());
+            if (student.isEmpty()) {
+                return new ControllerResponse<>(false, "Student not found", null);
+            }
 
             var jwtToken = jwtService.generateToken(user.get());
             return new ControllerResponse<>(true, null, AuthenticationResponse.builder()
@@ -122,13 +121,5 @@ public class AuthenticationService {
             return new ControllerResponse<>(false, "An unexpected error occurred while processing your request. Please try again later.", null);
         }
 
-    }
-
-    public ControllerResponse <AuthenticationResponse> logout(LogoutRequest logoutRequest) {
-        try {
-            return new ControllerResponse<>(true, null, null);
-        } catch (Exception e) {
-            return new ControllerResponse<>(false, e.getMessage(), null);
-        }
     }
 }

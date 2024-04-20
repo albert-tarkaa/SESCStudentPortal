@@ -1,4 +1,4 @@
-package uk.ac.leedsbeckett.albertarkaa.studentportal.Utils;
+package uk.ac.leedsbeckett.albertarkaa.studentportal.Utils.Authentication;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

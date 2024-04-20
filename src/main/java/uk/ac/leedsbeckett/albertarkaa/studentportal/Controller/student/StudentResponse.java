@@ -21,7 +21,6 @@ public class StudentResponse {
     private String firstName;
     private String lastName;
     private List<CourseInfo> courses;
-    private boolean updated;
 
 
     public StudentResponse(StudentModel studentToUpdate) {
@@ -30,7 +29,6 @@ public class StudentResponse {
         this.email = studentToUpdate.getEmail();
         this.firstName = studentToUpdate.getFirstName();
         this.lastName = studentToUpdate.getLastName();
-        this.updated = studentToUpdate.isUpdated();
         this.courses = studentToUpdate.getStudentCourses().stream()
                 .map(studentCourse -> new CourseInfo(studentCourse.getCourse(), studentCourse.getReference()))
                 .collect(Collectors.toList());

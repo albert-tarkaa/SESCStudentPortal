@@ -27,7 +27,6 @@ public class StudentModel {
     private String studentID;
     private String firstName;
     private String lastName;
-    private boolean isUpdated = false;
     @Column(updatable = false)
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

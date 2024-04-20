@@ -2,8 +2,11 @@
 
 This project is a microservices-based student portal, which allows students to enrol in courses, view their enrolments, and manage their profiles. The portal is integrated with a finance microservice to manage student accounts and invoices, and a library microservice to manage library accounts and fines.
 
-![Alt text](img.png?raw=true "Student Portal")
+![Student Portal](img.png?raw=true "Student Portal")
 
+Swagger documentation is available at `http://localhost:8082/studentportal-docs/v1/swagger-ui/index.html`.
+
+![UML Diagram](img.png?raw=true "UML.png")
 
 ## Requirements
 To fulfill the objectives of this module, the following features need to be implemented:
@@ -29,3 +32,5 @@ Integration with the following services is necessary:
 
 ## License
 This project is licensed under the MIT License.
+
+

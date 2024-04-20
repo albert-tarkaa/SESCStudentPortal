@@ -1,4 +1,4 @@
-package uk.ac.leedsbeckett.albertarkaa.studentportal.Utils;
+package uk.ac.leedsbeckett.albertarkaa.studentportal.Utils.Authentication;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -8,7 +8,6 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.UserModel;
 
 import java.security.Key;
 import java.util.Date;

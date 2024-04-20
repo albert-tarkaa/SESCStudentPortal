@@ -1,7 +1,6 @@
 package uk.ac.leedsbeckett.albertarkaa.studentportal.Service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,22 +17,20 @@ import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.StudentCourseModel;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.StudentModel;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Model.UserModel;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Repository.StudentRepository;
-import uk.ac.leedsbeckett.albertarkaa.studentportal.Utils.AuthServiceImplementation;
+import uk.ac.leedsbeckett.albertarkaa.studentportal.Utils.Authentication.AuthenticationUtility;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.Utils.ControllerResponse;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class StudentService {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
     private final StudentRepository studentRepository;
-    private final AuthServiceImplementation authServiceImplementation;
+    private final AuthenticationUtility authenticationUtility;
     @Value("${financeUrl}")
     private String financeURL;
 
@@ -52,12 +49,11 @@ public class StudentService {
     public ControllerResponse<StudentResponse> getStudent(int id, String token) {
         try {
 
-            Optional<UserModel> userOptional = authServiceImplementation.getUserByToken(token);
-            if (userOptional.isEmpty()) return new ControllerResponse<>(false, "User not found", null);
-
-            UserModel user = userOptional.get();
-            if (!authServiceImplementation.isAuthorized(user, id))
-                return new ControllerResponse<>(false, "Unauthorized", null);
+            ControllerResponse<?> response = authenticationUtility.authorizeUser(token, id);
+            if (!response.isSuccess()) {
+                // User is not authorized, return the authResponse
+                return new ControllerResponse<>(false, response.getErrorMessage(), null);
+            }
 
             StudentModel studentOptional = studentRepository.findById(id);
             if (studentOptional != null) {
@@ -73,7 +69,6 @@ public class StudentService {
                         .studentID(studentOptional.getStudentID())
                         .firstName(studentOptional.getFirstName())
                         .lastName(studentOptional.getLastName())
-                        .updated(studentOptional.isUpdated())
                         .email(studentOptional.getEmail())
                         .courses(courses)
                         .build());
@@ -90,28 +85,21 @@ public class StudentService {
     public ControllerResponse<StudentResponse> updateStudent(int id, StudentUpdateRequest studentUpdateRequest, String token) {
         try {
 
-            Optional<UserModel> userOptional = authServiceImplementation.getUserByToken(token);
-            if (userOptional.isEmpty()) return new ControllerResponse<>(false, "User not found", null);
-
-            UserModel user = userOptional.get();
-            if (!authServiceImplementation.isAuthorized(user, id))
-                return new ControllerResponse<>(false, "Unauthorized", null);
+            ControllerResponse<?> response = authenticationUtility.authorizeUser(token, id);
+            if (!response.isSuccess()) {
+                // User is not authorized, return the authResponse
+                return new ControllerResponse<>(false, response.getErrorMessage(), null);
+            }
 
             StudentModel studentOptional = studentRepository.findById(id);
             if (studentOptional != null) {
-                if (studentOptional.isUpdated()) {
-                    return new ControllerResponse<>(false, "Student details have already been updated", null);
-                }
-
-                if (studentUpdateRequest == null || studentUpdateRequest.getFirstName() == null || studentUpdateRequest.getLastName() == null) {
+                if (studentUpdateRequest == null || studentUpdateRequest.getFirstName() == null || studentUpdateRequest.getLastName() == null)
                     return new ControllerResponse<>(false, "Invalid request: First name and last name are required", null);
-                }
 
                 updateStudentDetails(studentOptional, studentUpdateRequest);
                 return new ControllerResponse<>(true, null, new StudentResponse(studentOptional));
-            } else {
-                return new ControllerResponse<>(false, "Student not found", null);
-            }
+            } else return new ControllerResponse<>(false, "Student not found", null);
+
         } catch (Exception e) {
             logger.error("An error occurred", e);
             return new ControllerResponse<>(false, "An unexpected error occurred while processing your request. Please try again later.", null);
@@ -123,19 +111,16 @@ public class StudentService {
         studentToUpdate.setFirstName(studentUpdateRequest.getFirstName());
         studentToUpdate.setLastName(studentUpdateRequest.getLastName());
         studentToUpdate.setUpdatedAt(LocalDateTime.now());
-        studentToUpdate.setUpdated(true);
         studentRepository.save(studentToUpdate);
     }
 
     public ControllerResponse<Object> getGraduationStatus(int id, String token) {
         try {
-
-            Optional<UserModel> userOptional = authServiceImplementation.getUserByToken(token);
-            if (userOptional.isEmpty()) return new ControllerResponse<>(false, "User not found", null);
-
-            UserModel user = userOptional.get();
-            if (!authServiceImplementation.isAuthorized(user, id))
-                return new ControllerResponse<>(false, "Unauthorized", null);
+            ControllerResponse<?> response = authenticationUtility.authorizeUser(token, id);
+            if (!response.isSuccess()) {
+                // User is not authorized, return the authResponse
+                return new ControllerResponse<>(false, response.getErrorMessage(), null);
+            }
 
             StudentModel studentOptional = studentRepository.findById(id);
             if (studentOptional != null) {
