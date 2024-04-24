@@ -14,8 +14,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class CourseEnrollmentRequest {
     private double amount;
-    private LocalDate dueDate=LocalDate.now();
+    @Builder.Default
     private String type ="TUITION_FEES";
-    private Account account;
+    private String studentId;
 }
 

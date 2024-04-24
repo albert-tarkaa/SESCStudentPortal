@@ -8,17 +8,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import uk.ac.leedsbeckett.albertarkaa.studentportal.dto.response.auth.FinanceResponse;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.controller.course.CourseInfo;
-import uk.ac.leedsbeckett.albertarkaa.studentportal.dto.response.student.StudentResponse;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.dto.request.student.StudentUpdateRequest;
+import uk.ac.leedsbeckett.albertarkaa.studentportal.dto.response.ControllerResponse;
+import uk.ac.leedsbeckett.albertarkaa.studentportal.dto.response.student.GraduationResponse;
+import uk.ac.leedsbeckett.albertarkaa.studentportal.dto.response.student.StudentResponse;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.model.CourseModel;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.model.StudentCourseModel;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.model.StudentModel;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.model.UserModel;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.repository.StudentRepository;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.util.Authentication.AuthenticationUtility;
-import uk.ac.leedsbeckett.albertarkaa.studentportal.dto.response.ControllerResponse;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -59,9 +59,11 @@ public class StudentService {
             if (studentOptional != null) {
 
                 List<CourseInfo> courses = new ArrayList<>();
-                for (StudentCourseModel courseModel : studentOptional.getStudentCourses()) {
-                    CourseModel course = courseModel.getCourse();
-                    courses.add(new CourseInfo(course, courseModel.getReference()));
+                if (studentOptional.getStudentCourses() != null){
+                    for (StudentCourseModel courseModel : studentOptional.getStudentCourses()) {
+                        CourseModel course = courseModel.getCourse();
+                        courses.add(new CourseInfo(course, courseModel.getReference()));
+                    }
                 }
 
                 return new ControllerResponse<>(true, null, StudentResponse.builder()
@@ -127,10 +129,11 @@ public class StudentService {
 
                 RestTemplate restTemplate = new RestTemplate();
 
-                FinanceResponse financeResponse =
-                        restTemplate.getForObject(financeURL + "/accounts/student/" + studentOptional.getStudentID(), FinanceResponse.class);
+                GraduationResponse gradResponse =
+                        restTemplate.getForObject(financeURL + "/accounts/" + studentOptional.getStudentID(), GraduationResponse.class);
 
-                if (financeResponse != null && financeResponse.isHasOutstandingBalance()) {
+
+                if (gradResponse != null && gradResponse.isSuccess() && gradResponse.getData().isHasOutstandingBalance()) {
                     return new ControllerResponse<>(true, null, "You have an outstanding balance. Please clear your balance to graduate.");
                 } else {
                     return new ControllerResponse<>(true, null, "You are eligible to graduate.");

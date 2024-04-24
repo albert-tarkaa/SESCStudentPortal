@@ -67,11 +67,11 @@ public class AuthenticationService {
             Optional <StudentModel> student = studentRepository.findByEmail(user.getEmail());
 
             // Register student in Finance and Library microservices
-            if (student.isEmpty()) return new ControllerResponse<>(false, "Student not found", null);
+            if (student.isEmpty()) return new ControllerResponse<>(false, "Account not found", null);
 
             String studentID = student.get().getStudentID();
             MicroservicesStudentIDRequest microservicesStudentIDRequest = MicroservicesStudentIDRequest.builder()
-                    .StudentId(studentID)
+                    .studentId(studentID)
                     .build();
 
             HttpHeaders headers = new HttpHeaders();
@@ -83,7 +83,8 @@ public class AuthenticationService {
                     headers);
 
 
-            restTemplate.postForObject(financeURL + "/accounts/", AccountRequest, FinanceResponse.class);
+         FinanceResponse res=   restTemplate.postForObject(financeURL + "/accounts", AccountRequest,
+                    FinanceResponse.class);
             restTemplate.postForObject(libraryURL + "/api/register", AccountRequest, LibraryResponse.class);
 
             return new ControllerResponse<>(true, null,"User registered successfully");

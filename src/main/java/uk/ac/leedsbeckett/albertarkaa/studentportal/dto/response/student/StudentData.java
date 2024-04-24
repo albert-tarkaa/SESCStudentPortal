@@ -1,4 +1,4 @@
-package uk.ac.leedsbeckett.albertarkaa.studentportal.dto.response.course;
+package uk.ac.leedsbeckett.albertarkaa.studentportal.dto.response.student;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,8 +12,8 @@ import java.util.Map;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CourseEnrollmentResponse {
-    private boolean success;
-    private String errorMessage;
-    private InvoiceData data;
+public class StudentData {
+    private long id;
+    private String studentId;
+    private boolean hasOutstandingBalance;
 }

@@ -1,0 +1,60 @@
+version: "3.1"
+
+services:
+  db:
+    container_name: mysql-studentportal-db
+    image: mysql:5.7
+    ports:
+      - "3306:3306"
+    expose:
+      - "3306"
+    deploy:
+      mode: global
+    restart: always
+    environment:
+        MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+        MYSQL_DATABASE: ${DATABASE_NAME}
+        MYSQL_USER: ${DATABASE_USER}
+        MYSQL_PASSWORD: ${DATABASE_PASSWORD}
+    volumes:
+      - mysql_studentportal_data:/var/lib/mysql
+
+  api:
+    container_name: studentportal-api
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    depends_on:
+      - db
+    environment:
+      SERVER_PORT: ${SERVER_PORT}
+      SPRING_DATASOURCE_URL: ${DATASOURCE_URL}/${DATABASE_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DATABASE_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DATABASE_PASSWORD}
+      SPRING_DATASOURCE_DRIVERCLASSNAME: ${DATABASE_DRIVER_CLASS_NAME}
+      SPRING_JPA_HIBERNATE_DDL-AUTO: ${SPRING_DATA_JPA_DDL}
+      SPRING_JPA_DATABASE: ${SPRING_DATA_JPA_DATABASE}
+      JWT_SECRET: ${JWT_SECRET}
+      URI_BASE_LIBRARY: ${URI_BASE_LIBRARY}
+      URI_BASE_FINANCE: ${URI_BASE_FINANCE}
+    volumes:
+      - studentportal_api:/app
+    networks:
+      - default
+
+  web:
+    container_name: student-web
+    build:
+      context: ../../frontend/student
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_STUDENT_API_URL: ${VITE_STUDENT_API_URL}
+
+volumes:
+  mysql_studentportal_data:
+    driver: local
+  studentportal_api:
+    driver: local

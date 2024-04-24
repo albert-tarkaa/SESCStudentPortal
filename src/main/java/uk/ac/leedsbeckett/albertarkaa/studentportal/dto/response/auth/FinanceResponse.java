@@ -16,6 +16,5 @@ public class FinanceResponse {
     private int id;
     private String studentId;
     private boolean hasOutstandingBalance;
-    private Map<String, Map<String, String>> _links;
 }
 

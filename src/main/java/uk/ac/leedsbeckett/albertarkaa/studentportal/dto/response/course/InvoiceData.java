@@ -12,8 +12,13 @@ import java.util.Map;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CourseEnrollmentResponse {
-    private boolean success;
-    private String errorMessage;
-    private InvoiceData data;
+public class InvoiceData {
+    private long id;
+    private String reference;
+    private double amount;
+    private LocalDate dueDate;
+    private String type;
+    private String status;
+    private String studentId;
+    private Map<String, Map<String, String>> _links;
 }

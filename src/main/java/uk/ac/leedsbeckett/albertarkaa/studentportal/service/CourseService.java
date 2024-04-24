@@ -9,8 +9,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import uk.ac.leedsbeckett.albertarkaa.studentportal.controller.course.*;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.dto.request.course.CourseEnrollmentRequest;
+import uk.ac.leedsbeckett.albertarkaa.studentportal.dto.response.ControllerResponse;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.dto.response.course.CourseEnrollmentResponse;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.dto.response.course.CourseResponse;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.dto.response.course.EnrollmentResponse;
@@ -23,7 +23,6 @@ import uk.ac.leedsbeckett.albertarkaa.studentportal.repository.StudentCourseRepo
 import uk.ac.leedsbeckett.albertarkaa.studentportal.repository.StudentRepository;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.util.Authentication.AuthServiceImplementation;
 import uk.ac.leedsbeckett.albertarkaa.studentportal.util.Authentication.AuthenticationUtility;
-import uk.ac.leedsbeckett.albertarkaa.studentportal.dto.response.ControllerResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,17 +33,16 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CourseService {
 
-    @Value("${financeUrl}")
-    private String financeURL;
-
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
     private final CourseRepository courseRepository;
     private final StudentRepository studentRepository;
     private final StudentCourseRepository studentCourseRepository;
     private final AuthServiceImplementation authServiceImplementation;
     private final AuthenticationUtility authenticationUtility;
-    private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
+    @Value("${financeUrl}")
+    private String financeURL;
 
-    public ControllerResponse<List<CourseResponse>> getAllCourses(String token, String CourseName){
+    public ControllerResponse<List<CourseResponse>> getAllCourses(String token, String CourseName) {
         try {
             Optional<UserModel> userOptional = authServiceImplementation.getUserByToken(token);
             if (userOptional.isEmpty()) {
@@ -105,47 +103,36 @@ public class CourseService {
 
             CourseEnrollmentRequest courseEnrollmentRequest = new CourseEnrollmentRequest();
             courseEnrollmentRequest.setAmount(courseModel.getFee());
-
-            Account account = new Account();
-            account.setStudentId(studentModel.getStudentID());
-            courseEnrollmentRequest.setAccount(account);
-
+            courseEnrollmentRequest.setStudentId(studentModel.getStudentID());
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             RestTemplate restTemplate = new RestTemplate();
-            HttpEntity<CourseEnrollmentRequest> AccountRequest = new HttpEntity<>(courseEnrollmentRequest,headers);
+            HttpEntity<CourseEnrollmentRequest> AccountRequest = new HttpEntity<>(courseEnrollmentRequest, headers);
 
-
-            CourseEnrollmentResponse enrollmentResponse =  restTemplate.postForObject(financeURL + "/invoices/",
+            CourseEnrollmentResponse enrollmentResponse = restTemplate.postForObject(financeURL + "/invoice/create",
                     AccountRequest, CourseEnrollmentResponse.class);
 
-            StudentCourseModel enrollment = null;
-            if (enrollmentResponse != null) {
-                enrollment = StudentCourseModel.builder()
-                        .student(studentModel)
-                        .course(courseModel)
-                        .reference(enrollmentResponse.getReference())
-                        .enrolledAt(LocalDateTime.now())
-                        .build();
-            }
-
-            EnrollmentResponse enrollmentResponseData = null;
-            if (enrollment != null) {
-                enrollmentResponseData = EnrollmentResponse.builder()
-                        .courseCode(courseModel.getCourseCode())
-                        .courseName(courseModel.getCourseName())
-                        .courseDescription(courseModel.getCourseDescription())
-                        .fee(courseModel.getFee())
-                        .reference(enrollment.getReference())
-                        .build();
-            }
+            StudentCourseModel enrollment = StudentCourseModel.builder()
+                    .student(studentModel)
+                    .course(courseModel)
+                    .reference(enrollmentResponse.getData().getReference())
+                    .enrolledAt(LocalDateTime.now())
+                    .build();
 
 
-            if (enrollment != null) {
-                studentCourseRepository.save(enrollment);
-            }
+            EnrollmentResponse enrollmentResponseData = EnrollmentResponse.builder()
+                    .courseCode(courseModel.getCourseCode())
+                    .courseName(courseModel.getCourseName())
+                    .courseDescription(courseModel.getCourseDescription())
+                    .fee(courseModel.getFee())
+                    .reference(enrollment.getReference())
+                    .build();
+
+
+            studentCourseRepository.save(enrollment);
+
             return new ControllerResponse<EnrollmentResponse>(true, null, new EnrollmentResponse(enrollmentResponseData));
         } catch (Exception e) {
             logger.error("An error occurred", e);
